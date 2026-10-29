@@ -1,25 +1,31 @@
 const apiURL = 'https://panaderiaapi-e9ll.onrender.com/api/productos';
 const bannerRed = document.getElementById('estado-red');
 let productosActuales = []; 
-let productoAEliminarId = null; // Variable para almacenar qué producto se va a borrar
+let productoAEliminarId = null; 
 
 // ==========================================
 // 1. CARGA DE PRODUCTOS
 // ==========================================
 async function cargarProductos() {
+    let productosBase = [];
+    
     try {
         const respuesta = await fetch(apiURL);
-        productosActuales = await respuesta.json();
-        renderizarCatalogo(productosActuales);
+        productosBase = await respuesta.json();
+        localStorage.setItem('productosCache', JSON.stringify(productosBase));
     } catch (error) {
         console.error('Modo Offline:', error);
-        const cola = JSON.parse(localStorage.getItem('colaOperaciones')) || [];
-        const locales = cola.filter(op => op.metodo === 'POST').map(op => op.datos);
-        renderizarCatalogo(locales, true);
+        productosBase = JSON.parse(localStorage.getItem('productosCache')) || [];
     }
+
+    const cola = JSON.parse(localStorage.getItem('colaOperaciones')) || [];
+    const creadosLocalmente = cola.filter(op => op.metodo === 'POST').map(op => op.datos);
+    
+    productosActuales = [...productosBase, ...creadosLocalmente];
+    renderizarCatalogo(productosActuales);
 }
 
-function renderizarCatalogo(productos, esLocal = false) {
+function renderizarCatalogo(productos) {
     const contenedor = document.getElementById('catalogo');
     contenedor.innerHTML = ''; 
     
@@ -27,6 +33,7 @@ function renderizarCatalogo(productos, esLocal = false) {
         const tarjeta = document.createElement('div');
         tarjeta.className = 'tarjeta';
         const idRender = producto.id || producto.tempId; 
+        const esLocal = !producto.id; 
         
         tarjeta.onclick = () => abrirDetalles(idRender);
 
@@ -45,6 +52,11 @@ function renderizarCatalogo(productos, esLocal = false) {
 // ==========================================
 window.cerrarModal = function(idModal) {
     document.getElementById(idModal).classList.add('oculto');
+}
+
+function mostrarAlertaModal(mensaje) {
+    document.getElementById('alerta-mensaje').textContent = mensaje;
+    document.getElementById('modal-alerta').classList.remove('oculto');
 }
 
 window.abrirDetalles = function(id) {
@@ -134,16 +146,16 @@ document.getElementById('form-producto').addEventListener('submit', async (e) =>
 // 4. ELIMINACIÓN Y OFFLINE
 // ==========================================
 window.confirmarEliminacion = function(id) {
-    cerrarModal('modal-detalles'); // Cierra la tarjeta de detalles
-    productoAEliminarId = id; // Guarda el ID temporalmente
-    document.getElementById('modal-confirmacion').classList.remove('oculto'); // Abre el nuevo modal
+    cerrarModal('modal-detalles'); 
+    productoAEliminarId = id; 
+    document.getElementById('modal-confirmacion').classList.remove('oculto'); 
 }
 
 document.getElementById('btn-confirmar-eliminar').addEventListener('click', async () => {
     if (productoAEliminarId !== null) {
         cerrarModal('modal-confirmacion');
         await gestionarAccion('DELETE', `${apiURL}/${productoAEliminarId}`);
-        productoAEliminarId = null; // Limpia la variable
+        productoAEliminarId = null; 
     }
 });
 
@@ -167,7 +179,7 @@ function encolarOperacion(metodo, url, datos) {
     let cola = JSON.parse(localStorage.getItem('colaOperaciones')) || [];
     cola.push({ metodo, url, datos });
     localStorage.setItem('colaOperaciones', JSON.stringify(cola));
-    alert('Sin conexión: Operación guardada localmente.');
+    mostrarAlertaModal('Sin conexión: Operación guardada localmente en la cola.');
 }
 
 async function sincronizarPendientes() {
@@ -180,6 +192,7 @@ async function sincronizarPendientes() {
     }
     localStorage.removeItem('colaOperaciones');
     cargarProductos();
+    mostrarAlertaModal('¡Sincronización completada con éxito!');
 }
 
 window.addEventListener('online', () => {

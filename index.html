@@ -8,6 +8,9 @@
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
+    <!-- Decoración Vectorial en las Esquinas -->
+    <div class="fondo-panes"></div>
+
     <header>
         <h1>Panadería Artesanal</h1>
         <div id="estado-red" class="oculto"></div>
@@ -15,7 +18,7 @@
     </header>
     
     <main>
-        <!-- Contenedor del Catálogo (Única vista inicial) -->
+        <!-- Contenedor del Catálogo -->
         <div id="catalogo" class="grid-productos">
             <!-- Las tarjetas se inyectan aquí -->
         </div>
@@ -77,6 +80,17 @@
                 <div class="botones-accion">
                     <button class="btn-eliminar" id="btn-confirmar-eliminar">Sí, Eliminar</button>
                     <button class="btn-cancelar" onclick="cerrarModal('modal-confirmacion')">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal 4: Alerta del Sistema -->
+        <div id="modal-alerta" class="oculto modal-fondo">
+            <div class="modal-contenido" style="text-align: center; max-width: 350px;">
+                <h2 style="color: #b05e27; font-size: 1.3em;">Aviso del Sistema</h2>
+                <p id="alerta-mensaje" class="texto-secundario" style="margin: 15px 0;">Mensaje aquí</p>
+                <div class="botones-accion">
+                    <button class="btn-guardar" onclick="cerrarModal('modal-alerta')">Aceptar</button>
                 </div>
             </div>
         </div>

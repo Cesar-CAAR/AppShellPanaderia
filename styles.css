@@ -1,9 +1,37 @@
 body {
-    background-color: #faf8f5;
+    background-color: #faf8f5; 
     color: #4a3b32;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 20px;
+    min-height: 100vh;
+}
+
+/* Ilustraciones de panes en las 4 esquinas de la pantalla */
+.fondo-panes {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none; /* Evita que estorben al hacer clic */
+    z-index: -1;
+    opacity: 0.12; /* Transparencia para que funcionen como marca de agua */
+    
+    background-image: 
+        /* Croissant (Arriba Izquierda) */
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M15 65 C15 25 85 25 85 65 C92 75 98 60 95 45 C80 5 20 5 5 45 C2 60 8 75 15 65 Z' fill='%238b4513'/%3E%3Cpath d='M30 35 L40 65 M50 25 L55 70 M70 35 L60 65' stroke='%23faf8f5' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E"),
+        /* Pan Trenzado (Abajo Izquierda) */
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='25' y='10' width='50' height='80' rx='25' fill='%238b4513'/%3E%3Cpath d='M25 35 C40 35 60 25 75 15 M25 55 C40 55 60 45 75 35 M25 75 C40 75 60 65 75 55' stroke='%23faf8f5' stroke-width='5' fill='none'/%3E%3C/svg%3E"),
+        /* Croissant invertido (Abajo Derecha) */
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg transform='scale(-1, 1) translate(-100, 0)'%3E%3Cpath d='M15 65 C15 25 85 25 85 65 C92 75 98 60 95 45 C80 5 20 5 5 45 C2 60 8 75 15 65 Z' fill='%238b4513'/%3E%3Cpath d='M30 35 L40 65 M50 25 L55 70 M70 35 L60 65' stroke='%23faf8f5' stroke-width='4' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E"),
+        /* Dona (Arriba Derecha) */
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%238b4513'/%3E%3Ccircle cx='50' cy='50' r='15' fill='%23faf8f5'/%3E%3Cpath d='M20 40 C35 25 65 25 80 40 C90 55 75 80 65 85 C50 90 35 85 25 75 C10 65 5 50 20 40 Z' fill='%23d2b48c'/%3E%3C/svg%3E");
+        
+    background-repeat: no-repeat;
+    background-size: 250px, 180px, 300px, 200px;
+    background-position: 
+        -60px -50px,   /* Arriba Izquierda */
+        -30px 105%,    /* Abajo Izquierda */
+        110% 110%,     /* Abajo Derecha */
+        110% -40px;    /* Arriba Derecha */
 }
 
 header {
@@ -100,6 +128,21 @@ hr { border: 0; height: 1px; background: #e8d8c8; margin: 20px 0; }
 .btn-cancelar { background-color: #a0aec0; } .btn-cancelar:hover { background-color: #718096; }
 
 .ingredientes-lista { padding-left: 20px; color: #6b5c51; font-size: 0.95em; line-height: 1.6; }
-#estado-red { text-align: center; padding: 10px; font-weight: bold; color: white; margin-bottom: 20px; border-radius: 6px; }
+
+/* Notificación flotante de Red tipo Toast */
+#estado-red {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    font-weight: bold;
+    color: white;
+    transition: all 0.3s ease;
+    border-radius: 50px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 1100;
+    font-size: 0.9em;
+}
+#estado-red.oculto { display: none !important; }
 #estado-red.offline { background-color: #e53e3e; }
 #estado-red.online { background-color: #38a169; }
