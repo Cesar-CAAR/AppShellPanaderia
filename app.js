@@ -4,7 +4,30 @@ let productosActuales = [];
 let productoAEliminarId = null; 
 
 // ==========================================
-// 1. CARGA DE PRODUCTOS
+// 1. SISTEMA DE NOTIFICACIONES (TOAST)
+// ==========================================
+function mostrarNotificacion(mensaje, tipo = 'normal') {
+    // Si tienes un contenedor de toast en tu HTML, lo usamos. Si no, usamos el bannerRed como respaldo.
+    const toast = document.getElementById('toast-notificacion');
+    if (toast) {
+        const toastMensaje = document.getElementById('toast-mensaje');
+        if (toastMensaje) toastMensaje.textContent = mensaje;
+        toast.className = 'toast'; 
+        if (tipo === 'error') toast.classList.add('error');
+        if (tipo === 'success') toast.classList.add('success');
+        
+        toast.classList.remove('oculto-toast');
+        setTimeout(() => {
+            toast.classList.add('oculto-toast');
+        }, 3500);
+    } else {
+        mostrarEstadoRed(mensaje, tipo === 'error' ? 'offline' : 'online');
+        setTimeout(() => { if (bannerRed) bannerRed.classList.add('oculto'); }, 3500);
+    }
+}
+
+// ==========================================
+// 2. CARGA DE PRODUCTOS Y PERSISTENCIA OFFLINE
 // ==========================================
 async function cargarProductos() {
     let productosBase = [];
@@ -27,6 +50,7 @@ async function cargarProductos() {
 
 function renderizarCatalogo(productos) {
     const contenedor = document.getElementById('catalogo');
+    if (!contenedor) return;
     contenedor.innerHTML = ''; 
     
     productos.forEach(producto => {
@@ -40,23 +64,18 @@ function renderizarCatalogo(productos) {
         tarjeta.innerHTML = `
             <h2>${producto.nombre}</h2>
             <p class="precio">$${producto.precio.toFixed(2)}</p>
-            <p class="texto-secundario">${producto.descripcion.substring(0, 50)}...</p>
-            ${esLocal ? '<p style="color:red; font-size:12px;">(Guardado sin conexión)</p>' : ''}
+            <p class="texto-secundario">${(producto.descripcion || '').substring(0, 50)}...</p>
+            ${esLocal ? '<p style="color:#e53e3e; font-size:12px; font-weight:bold;">(Guardado sin conexión ⏳)</p>' : ''}
         `;
         contenedor.appendChild(tarjeta);
     });
 }
 
 // ==========================================
-// 2. CONTROL DE MODALES
+// 3. CONTROL DE MODALES
 // ==========================================
 window.cerrarModal = function(idModal) {
     document.getElementById(idModal).classList.add('oculto');
-}
-
-function mostrarAlertaModal(mensaje) {
-    document.getElementById('alerta-mensaje').textContent = mensaje;
-    document.getElementById('modal-alerta').classList.remove('oculto');
 }
 
 window.abrirDetalles = function(id) {
@@ -89,6 +108,7 @@ window.abrirModalCrear = function() {
 window.abrirModalEditar = function(id) {
     cerrarModal('modal-detalles'); 
     const producto = productosActuales.find(p => p.id == id || p.tempId == id);
+    if (!producto) return;
     
     document.getElementById('form-id').value = producto.id || producto.tempId;
     document.getElementById('form-nombre').value = producto.nombre;
@@ -105,7 +125,7 @@ window.abrirModalEditar = function(id) {
 }
 
 // ==========================================
-// 3. PROCESAR FORMULARIO (POST / PUT)
+// 4. PROCESAR FORMULARIO (POST / PUT)
 // ==========================================
 document.getElementById('form-producto').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -143,7 +163,7 @@ document.getElementById('form-producto').addEventListener('submit', async (e) =>
 });
 
 // ==========================================
-// 4. ELIMINACIÓN Y OFFLINE
+// 5. ELIMINACIÓN Y GESTIÓN DE ACCIONES OFFLINE
 // ==========================================
 window.confirmarEliminacion = function(id) {
     cerrarModal('modal-detalles'); 
@@ -164,8 +184,11 @@ async function gestionarAccion(metodo, url, datos = null) {
         try {
             const opciones = { method: metodo, headers: { 'Content-Type': 'application/json' } };
             if (datos) opciones.body = JSON.stringify(datos);
-            await fetch(url, opciones);
-            cargarProductos(); 
+            const respuesta = await fetch(url, opciones);
+            if (respuesta.ok) {
+                mostrarNotificacion(metodo === 'DELETE' ? 'Producto eliminado.' : 'Operación exitosa.', 'success');
+                cargarProductos(); 
+            }
         } catch (error) {
             encolarOperacion(metodo, url, datos);
         }
@@ -179,28 +202,39 @@ function encolarOperacion(metodo, url, datos) {
     let cola = JSON.parse(localStorage.getItem('colaOperaciones')) || [];
     cola.push({ metodo, url, datos });
     localStorage.setItem('colaOperaciones', JSON.stringify(cola));
-    mostrarAlertaModal('Sin conexión: Operación guardada localmente en la cola.');
+    mostrarNotificacion('Sin conexión: Operación guardada localmente.', 'error');
 }
 
 async function sincronizarPendientes() {
     let cola = JSON.parse(localStorage.getItem('colaOperaciones')) || [];
     if (cola.length === 0) return;
+    
     for (let op of cola) {
         const opciones = { method: op.metodo, headers: { 'Content-Type': 'application/json' } };
         if (op.datos) opciones.body = JSON.stringify(op.datos);
-        try { await fetch(op.url, opciones); } catch (e) { return; }
+        try { 
+            await fetch(op.url, opciones); 
+        } catch (e) { 
+            return; // Si vuelve a fallar, interrumpe y reintenta luego
+        }
     }
+    
     localStorage.removeItem('colaOperaciones');
     cargarProductos();
-    mostrarAlertaModal('¡Sincronización completada con éxito!');
+    mostrarNotificacion('¡Sincronización completada con éxito!', 'success');
 }
 
+// ==========================================
+// 6. EVENTOS DE RED
+// ==========================================
 window.addEventListener('online', () => {
-    mostrarEstadoRed('Conectado - Sincronizando...', 'online');
+    mostrarNotificacion('Conectado - Sincronizando pendientes...', 'success');
     sincronizarPendientes();
-    setTimeout(() => { if (bannerRed) bannerRed.classList.add('oculto'); }, 3000);
 });
-window.addEventListener('offline', () => mostrarEstadoRed('Sin conexión - Modo local', 'offline'));
+
+window.addEventListener('offline', () => {
+    mostrarNotificacion('Sin conexión - Modo local activado', 'error');
+});
 
 function mostrarEstadoRed(mensaje, clase) {
     if (bannerRed) {
@@ -210,4 +244,8 @@ function mostrarEstadoRed(mensaje, clase) {
     }
 }
 
+// ==========================================
+// INICIAR APLICACIÓN
+// ==========================================
+cargarComponentes = cargarProductos; // Alias por compatibilidad
 cargarProductos();
