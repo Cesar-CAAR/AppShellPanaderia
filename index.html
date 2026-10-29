@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Panadería Artesanal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <header>
+        <h1>Panadería Artesanal</h1>
+        <div id="estado-red" class="oculto"></div>
+        <button class="btn-crear-flotante" onclick="abrirModalCrear()">+ Crear Producto</button>
+    </header>
+    
+    <main>
+        <!-- Contenedor del Catálogo (Única vista inicial) -->
+        <div id="catalogo" class="grid-productos">
+            <!-- Las tarjetas se inyectan aquí -->
+        </div>
+
+        <!-- Modal 1: Detalles del Producto -->
+        <div id="modal-detalles" class="oculto modal-fondo">
+            <div class="modal-contenido">
+                <h2 id="detalle-nombre">Nombre</h2>
+                <p id="detalle-descripcion" class="texto-secundario">Descripción</p>
+                <p class="precio" id="detalle-precio">$0.00</p>
+                <p><strong>Horneado:</strong> <span id="detalle-temperatura"></span></p>
+                <hr>
+                <p><strong>Ingredientes:</strong></p>
+                <ul class="ingredientes-lista" id="detalle-ingredientes"></ul>
+                
+                <div class="botones-accion">
+                    <button class="btn-editar" id="btn-detalle-editar">Editar</button>
+                    <button class="btn-eliminar" id="btn-detalle-eliminar">Eliminar</button>
+                    <button class="btn-cancelar" onclick="cerrarModal('modal-detalles')">Cerrar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal 2: Formulario (Crear y Editar) -->
+        <div id="modal-formulario" class="oculto modal-fondo">
+            <div class="modal-contenido">
+                <h2 id="form-titulo">Nuevo Producto</h2>
+                <form id="form-producto">
+                    <input type="hidden" id="form-id">
+                    
+                    <label>Nombre del pan:</label>
+                    <input type="text" id="form-nombre" placeholder="Ej. Roles de Canela" maxlength="100" required>
+                    
+                    <label>Descripción:</label>
+                    <input type="text" id="form-descripcion" placeholder="Descripción breve" maxlength="250" required>
+                    
+                    <label>Precio ($):</label>
+                    <input type="number" id="form-precio" placeholder="0.00" step="0.01" min="0.01" max="9999.99" required>
+                    
+                    <label>Temperatura y Horneado:</label>
+                    <input type="text" id="form-temperatura" placeholder="Ej. 180°C por 20 min" maxlength="100" required>
+                    
+                    <label>Ingredientes (Uno por línea, ej: 500 gramos Harina):</label>
+                    <textarea id="form-ingredientes" rows="4" placeholder="500 gramos Harina&#10;15 gramos Canela" maxlength="1000" required></textarea>
+                    
+                    <div class="botones-accion">
+                        <button type="submit" class="btn-guardar">Guardar Producto</button>
+                        <button type="button" class="btn-cancelar" onclick="cerrarModal('modal-formulario')">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal 3: Confirmación de Eliminación -->
+        <div id="modal-confirmacion" class="oculto modal-fondo">
+            <div class="modal-contenido" style="text-align: center;">
+                <h2 style="color: #e53e3e;">¿Eliminar Producto?</h2>
+                <p class="texto-secundario" style="margin: 20px 0;">¿Estás seguro de que deseas eliminar este pan artesanal del catálogo? Esta acción no se puede deshacer.</p>
+                <div class="botones-accion">
+                    <button class="btn-eliminar" id="btn-confirmar-eliminar">Sí, Eliminar</button>
+                    <button class="btn-cancelar" onclick="cerrarModal('modal-confirmacion')">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.error('Error SW:', err));
+            });
+        }
+    </script>
+</body>
+</html>
